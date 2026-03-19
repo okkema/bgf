@@ -25,7 +25,6 @@ module "application" {
   zone_id    = var.cloudflare_zone_id
   name       = var.github_repository
   role       = var.auth0_role
-  use_root   = true
   path       = "edit"
 }
 

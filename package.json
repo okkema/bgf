@@ -1,0 +1,28 @@
+{
+  "name": "bgf",
+  "version": "0.0.1",
+  "description": "Bike Glens Falls Website",
+  "type": "module",
+  "scripts": {
+    "build": "npx @okkema/home",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/okkema/bgf.git"
+  },
+  "keywords": [
+    "bike",
+    "glens",
+    "falls"
+  ],
+  "author": "Okkema Labs <correos@okkema.org>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/okkema/bgf/issues"
+  },
+  "homepage": "https://github.com/okkema/bgf#readme",
+  "dependencies": {
+    "@okkema/home": "^0.1.0"
+  }
+}

@@ -1,7 +1,12 @@
+locals {
+  audience = "https://${var.github_repository}.${module.zone.name}"
+  scope    = "write:settings"
+
+}
+
 module "page" {
-  source     = "app.terraform.io/okkema/page/cloudflare"
-  version    = "~> 1.0"
-  depends_on = [module.application, module.bucket]
+  source  = "app.terraform.io/okkema/page/cloudflare"
+  version = "~> 1.0"
 
   account_id = var.cloudflare_account_id
   zone_id    = var.cloudflare_zone_id
@@ -10,22 +15,15 @@ module "page" {
   hostnames  = [var.github_repository]
   buckets    = [{ name = "BUCKET", bucket_name = module.bucket.id }]
   secrets = [
-    { name = "CLOUDFLARE_ACCESS_DOMAIN", text = module.application.domain, },
-    { name = "CLOUDFLARE_ACCESS_AUD", text = module.application.aud, },
+    { name = "OAUTH_CLIENT_SECRET", text = module.client.client_secret, },
     { name = "SENTRY_DSN", text = module.sentry.dsn, }
   ]
-}
-
-module "application" {
-  source     = "app.terraform.io/okkema/application/cloudflare"
-  version    = "~> 1.1"
-  depends_on = [module.role]
-
-  account_id = var.cloudflare_account_id
-  zone_id    = var.cloudflare_zone_id
-  name       = var.github_repository
-  role       = var.auth0_role
-  path       = "edit"
+  env_vars = [
+    { name = "OAUTH_AUDIENCE", text = local.audience, },
+    { name = "OAUTH_CLIENT_ID", text = module.client.client_id, },
+    { name = "OAUTH_SCOPE", text = local.scope, },
+    { name = "OAUTH_TENANT", text = module.server.domain, },
+  ]
 }
 
 module "role" {
@@ -33,6 +31,9 @@ module "role" {
   version = "~> 0.1"
 
   name = var.auth0_role
+  scopes = [
+    { name = local.scope, audience = local.audience }
+  ]
 }
 
 module "bucket" {
@@ -48,6 +49,39 @@ module "sentry" {
   source  = "app.terraform.io/okkema/project/sentry"
   version = "~> 0.4"
 
-  github_repository   = var.github_repository
-  platform            = "other"
+  github_repository = var.github_repository
+  platform          = "other"
+}
+
+module "zone" {
+  source  = "app.terraform.io/okkema/zone/cloudflare"
+  version = "~> 1.0"
+
+  zone_id = var.cloudflare_zone_id
+}
+
+module "client" {
+  source  = "app.terraform.io/okkema/client/auth0"
+  version = "~> 1.0"
+
+  name = var.github_repository
+  callbacks = [
+    "${local.audience}/auth/login/callback",
+    "http://localhost:4321/auth/login/callback"
+  ]
+  logouts = [
+    "${local.audience}/auth/logout/callback",
+    "http://localhost:4321/auth/logout/callback"
+  ]
+}
+
+module "server" {
+  source  = "app.terraform.io/okkema/server/auth0"
+  version = "~> 1.0"
+
+  name       = var.github_repository
+  identifier = local.audience
+  scopes = [
+    { name = local.scope, description = "Update settings" }
+  ]
 }

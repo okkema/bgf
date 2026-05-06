@@ -23,6 +23,6 @@
   },
   "homepage": "https://github.com/okkema/bgf#readme",
   "dependencies": {
-    "@okkema/home": "^0.1.4"
+    "@okkema/home": "^1.1.1"
   }
 }
